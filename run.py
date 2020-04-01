@@ -30,6 +30,9 @@ from cytomine import CytomineJob
 from cytomine.utilities.software import setup_classify, parse_domain_list, str2bool
 
 
+def find_by_attribute(att_fil, attr, val):
+    return next(iter([i for i in att_fil if hasattr(i, attr) and getattr(i, attr) == val]), None)
+
 def main(argv):
     with CytomineJob.from_cli(argv) as cj:
         # annotation filtering
@@ -62,7 +65,7 @@ def main(argv):
         # extract model
         cj.job.update(progress=50, statusComment="Download the model file.")
         attached_files = AttachedFileCollection(train_job).fetch()
-        model_file = attached_files.find_by_attribute("filename", "model.joblib")
+        model_file = find_by_attribute(attached_files, "filename", "model.joblib")
         model_filepath = os.path.join(root_path, "model.joblib")
         model_file.download(model_filepath, override=True)
         pyxit = joblib.load(model_filepath)
