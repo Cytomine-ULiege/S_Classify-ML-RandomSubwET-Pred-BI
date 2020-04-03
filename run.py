@@ -46,6 +46,7 @@ def main(argv):
             set_folder="test", showWKT=True
         )
 
+        annotations = [annotation for annotation in downloaded for f in annotation.filenames]
         x = np.array([f for annotation in downloaded for f in annotation.filenames])
 
         # extract model data from previous job
@@ -82,7 +83,7 @@ def main(argv):
         predicted_terms = classes.take(y_pred, axis=0)
         collection = AnnotationCollection()
         for i in cj.monitor(range(x.shape[0]), start=80, end=99, period=0.005, prefix="Uploading predicted terms"):
-            annot, term, proba = downloaded[i], predicted_terms[i], probas[i]
+            annot, term, proba = annotations[i], predicted_terms[i], probas[i]
 
             parameters = {
                 "location": annot.location,
@@ -91,7 +92,7 @@ def main(argv):
                 "id_terms": [int(term)]
             }
             if proba is not None:
-                parameters["rate"] = float(proba)
+                parameters["rate"] = float(np.max(proba))
             collection.append(Annotation(**parameters))
         collection.save()
         cj.job.update(status=Job.TERMINATED, status_comment="Finish", progress=100)
